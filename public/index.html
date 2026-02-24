@@ -3,401 +3,373 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MorandiPlay - Music Player</title>
+<title>MorandiPlay</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#F5F0EB;--surface:#FFFFFF;--surface-alt:#EDE5DB;
   --primary:#C4956A;--primary-hover:#B8856C;--secondary:#D4A5A5;
   --accent:#C4785C;--text:#4A3728;--text-sec:#8B7B6B;--text-dim:#B5A898;
-  --border:#E8DDD3;--shadow:0 2px 16px rgba(74,55,40,.08);
-  --radius:12px;--player-h:90px;
+  --border:#E8DDD3;--radius:12px;--player-h:90px;
 }
-html,body{height:100%;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text)}
+html,body{height:100%;font-family:-apple-system,'PingFang SC','Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text)}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
 input,select{font:inherit;color:var(--text)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-/* ===== Layout ===== */
+/* Layout */
 .app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.header{display:flex;align-items:center;gap:12px;padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border)}
-.logo{font-size:20px;font-weight:700;color:var(--primary);white-space:nowrap}
+
+/* Header */
+.header{padding:20px 24px 0;background:var(--surface)}
+.header-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.logo{font-size:22px;font-weight:700;color:var(--primary);flex-shrink:0}
 .logo span{color:var(--accent)}
-.search-bar{flex:1;display:flex;gap:8px;max-width:700px;margin:0 auto}
-.search-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-alt);color:var(--text);outline:none}
-.search-bar input{flex:1;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);outline:none;min-width:0}
-.search-bar input:focus{border-color:var(--primary)}
-.search-bar button{padding:8px 20px;background:var(--primary);color:#fff;border-radius:var(--radius);font-weight:600;transition:background .2s}
-.search-bar button:hover{background:var(--primary-hover)}
+.search-wrap{flex:1;max-width:560px;position:relative}
+.search-wrap input{width:100%;padding:10px 44px 10px 16px;border:2px solid var(--border);border-radius:24px;background:var(--bg);outline:none;font-size:15px;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--primary)}
+.search-wrap button{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.search-wrap button:hover{background:var(--primary-hover)}
 
+/* Platform tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.tab{padding:10px 24px;font-size:14px;color:var(--text-sec);position:relative;transition:color .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);font-weight:600}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:12px;right:12px;height:2px;background:var(--accent);border-radius:1px}
+
+/* Main */
 .main{flex:1;display:flex;overflow:hidden;padding-bottom:var(--player-h)}
-.results-panel{flex:1;overflow-y:auto;padding:16px 24px}
-.lyrics-panel{width:380px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s}
-.lyrics-panel.hidden{width:0;border:none}
-.lyrics-header{padding:16px;font-weight:600;color:var(--text-sec);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.lyrics-body{flex:1;overflow-y:auto;padding:24px 20px;scroll-behavior:smooth}
-.lyrics-line{padding:8px 0;font-size:15px;color:var(--text-dim);transition:all .3s;text-align:center;line-height:1.8}
-.lyrics-line.active{color:var(--accent);font-size:18px;font-weight:600}
-.close-lyrics{font-size:18px;color:var(--text-dim);padding:4px 8px;border-radius:6px}
-.close-lyrics:hover{background:var(--surface-alt)}
+.results-panel{flex:1;overflow-y:auto;padding:8px 0}
+.lyrics-panel{width:360px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s}
+.lyrics-panel.hidden{width:0;border:none;padding:0}
+.lyrics-header{padding:14px 16px;font-size:13px;font-weight:600;color:var(--text-sec);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:1px}
+.lyrics-body{flex:1;overflow-y:auto;padding:24px 20px}
+.lyrics-line{padding:6px 0;font-size:15px;color:var(--text-dim);transition:all .35s;text-align:center;line-height:1.9}
+.lyrics-line.active{color:var(--accent);font-size:17px;font-weight:600}
+.close-btn{font-size:16px;color:var(--text-dim);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.close-btn:hover{background:var(--surface-alt)}
 
-/* Results */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60%;color:var(--text-dim)}
-.empty-icon{font-size:64px;margin-bottom:16px;opacity:.4}
-.empty-text{font-size:16px}
+/* Empty */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:70%;color:var(--text-dim);gap:8px}
+.empty-text{font-size:16px;font-weight:500}
+.empty-hint{font-size:13px;color:var(--border)}
+
+/* Song list */
 .song-list{list-style:none}
-.song-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius);cursor:pointer;transition:background .15s}
-.song-item:hover{background:var(--surface-alt)}
-.song-item.active{background:var(--surface-alt);border-left:3px solid var(--accent)}
-.song-index{width:28px;text-align:center;color:var(--text-dim);font-size:14px;flex-shrink:0}
+.song-item{display:flex;align-items:center;gap:14px;padding:10px 24px;cursor:pointer;transition:background .12s;border-left:3px solid transparent}
+.song-item:hover{background:rgba(196,149,106,.06)}
+.song-item.active{background:rgba(196,120,92,.08);border-left-color:var(--accent)}
+.song-idx{width:24px;text-align:center;color:var(--text-dim);font-size:13px;flex-shrink:0}
+.song-item.active .song-idx{color:var(--accent)}
 .song-info{flex:1;min-width:0}
-.song-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.song-detail{font-size:13px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.song-duration{color:var(--text-dim);font-size:13px;flex-shrink:0}
+.song-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-extra{font-size:12px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-dur{color:var(--text-dim);font-size:12px;flex-shrink:0}
 
-/* Player Bar */
-.player-bar{position:fixed;bottom:0;left:0;right:0;height:var(--player-h);background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -2px 20px rgba(74,55,40,.06);z-index:100}
-.player-inner{display:flex;align-items:center;gap:20px;height:100%;padding:0 24px;max-width:1400px;margin:0 auto}
-.player-info{display:flex;align-items:center;gap:12px;width:220px;flex-shrink:0;cursor:pointer}
-.player-cover{width:56px;height:56px;border-radius:10px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-dim);overflow:hidden;flex-shrink:0}
-.player-cover img{width:100%;height:100%;object-fit:cover}
-.player-meta{min-width:0}
-.player-title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player-artist{font-size:13px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.ctrl-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .15s}
-.ctrl-btn:hover{background:var(--surface-alt)}
-.ctrl-btn.play-btn{width:48px;height:48px;background:var(--primary);color:#fff;font-size:18px}
-.ctrl-btn.play-btn:hover{background:var(--primary-hover)}
-.ctrl-btn.small{width:32px;height:32px;font-size:13px;border-radius:8px}
-.player-progress{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
-.time{font-size:12px;color:var(--text-dim);width:40px;text-align:center;flex-shrink:0}
-.progress-bar,.volume-bar{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}
-.progress-bar{flex:1}
-.progress-bar::-webkit-slider-thumb,.volume-bar::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--primary);cursor:pointer;border:2px solid var(--surface)}
-.player-extra{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.volume-wrap{display:flex;align-items:center;gap:4px}
-.volume-bar{width:80px}
+/* Player */
+.player-bar{position:fixed;bottom:0;left:0;right:0;height:var(--player-h);background:var(--surface);border-top:1px solid var(--border);z-index:100}
+.progress-track{position:absolute;top:-3px;left:0;right:0;height:6px;cursor:pointer}
+.progress-fill{height:3px;background:var(--primary);border-radius:2px;width:0%;transition:width .1s linear;pointer-events:none}
+.progress-input{position:absolute;top:0;left:0;width:100%;height:6px;opacity:0;cursor:pointer;margin:0}
+.player-inner{display:flex;align-items:center;height:100%;padding:0 20px;gap:16px}
+.player-left{display:flex;align-items:center;gap:12px;width:240px;flex-shrink:0;cursor:pointer;overflow:hidden}
+.cover{width:52px;height:52px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.cover img{width:100%;height:100%;object-fit:cover}
+.meta{min-width:0}
+.title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.artist{font-size:12px;color:var(--text-sec);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-center{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ctl{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.ctl:hover{background:var(--surface-alt)}
+.ctl.play{width:44px;height:44px;background:var(--primary)}
+.ctl.play:hover{background:var(--primary-hover)}
+.ctl.small{width:28px;height:28px}
+.player-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.time{font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+.time-sep{font-size:11px;color:var(--border)}
+.quality-sel{padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-size:12px;color:var(--text-sec);outline:none;cursor:pointer}
+.quality-sel:hover{border-color:var(--primary)}
+.vol-wrap{display:flex;align-items:center;gap:2px}
+.vol-bar{-webkit-appearance:none;appearance:none;width:72px;height:3px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}
+.vol-bar::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--primary);cursor:pointer}
 
-/* Loading */
-.loading{text-align:center;padding:40px;color:var(--text-dim)}
-.spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+/* Loading & Toast */
+.loading{text-align:center;padding:48px;color:var(--text-dim)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Toast */
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:var(--radius);font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Responsive */
 @media(max-width:768px){
-  .header{flex-wrap:wrap;padding:12px 16px}
-  .search-bar{order:2;flex-basis:100%;max-width:100%}
-  .lyrics-panel{position:fixed;top:0;left:0;right:0;bottom:var(--player-h);width:100%!important;z-index:50;border:none}
+  .header-top{gap:10px}
+  .logo{font-size:18px}
+  .tab{padding:8px 16px;font-size:13px}
+  .lyrics-panel{position:fixed;top:0;left:0;right:0;bottom:var(--player-h);width:100%!important;z-index:50;border:none;background:var(--surface)}
   .lyrics-panel.hidden{display:none}
-  .player-inner{gap:12px;padding:0 12px}
-  .player-info{width:auto;max-width:140px}
-  .player-progress{display:none}
-  .player-extra .volume-wrap{display:none}
+  .player-left{width:auto;max-width:120px}
+  .player-right .time,.player-right .time-sep,.vol-wrap{display:none}
+  .song-item{padding:10px 16px}
 }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <!-- Header -->
+<div class="app">
   <div class="header">
-    <div class="logo">Morandi<span>Play</span></div>
-    <div class="search-bar">
-      <select id="platform">
-        <option value="netease">网易云</option>
-        <option value="qq">QQ音乐</option>
-        <option value="kuwo">酷我</option>
-      </select>
-      <input id="searchInput" type="text" placeholder="搜索歌曲、歌手..." autocomplete="off">
-      <select id="quality">
-        <option value="128k">128K</option>
-        <option value="320k" selected>320K</option>
-        <option value="flac">FLAC</option>
-        <option value="flac24bit">Hi-Res</option>
-      </select>
-      <button id="searchBtn" onclick="doSearch()">搜索</button>
+    <div class="header-top">
+      <div class="logo">Morandi<span>Play</span></div>
+      <div class="search-wrap">
+        <input id="searchInput" type="text" placeholder="搜索歌曲、歌手、专辑..." autocomplete="off">
+        <button onclick="doSearch()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-p="netease">网易云</button>
+      <button class="tab" data-p="qq">QQ音乐</button>
+      <button class="tab" data-p="kuwo">酷我</button>
     </div>
   </div>
 
-  <!-- Main -->
   <div class="main">
     <div class="results-panel" id="results">
       <div class="empty-state" id="emptyState">
-        <div class="empty-icon">♪</div>
+        <div class="empty-icon">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
         <div class="empty-text">搜索你喜欢的音乐</div>
+        <div class="empty-hint">输入关键词，按回车搜索</div>
       </div>
     </div>
     <div class="lyrics-panel hidden" id="lyricsPanel">
       <div class="lyrics-header">
         <span>歌词</span>
-        <button class="close-lyrics" onclick="toggleLyrics()">✕</button>
+        <button class="close-btn" onclick="toggleLyrics()">✕</button>
       </div>
       <div class="lyrics-body" id="lyricsBody"></div>
     </div>
   </div>
 
-  <!-- Player Bar -->
+  <!-- Player -->
   <div class="player-bar" id="playerBar">
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+      <input type="range" class="progress-input" id="progressBar" min="0" max="1000" value="0">
+    </div>
     <div class="player-inner">
-      <div class="player-info" onclick="toggleLyrics()">
-        <div class="player-cover" id="playerCover">♪</div>
-        <div class="player-meta">
-          <div class="player-title" id="playerTitle">未在播放</div>
-          <div class="player-artist" id="playerArtist">--</div>
+      <div class="player-left" onclick="toggleLyrics()">
+        <div class="cover" id="playerCover">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <div class="meta">
+          <div class="title" id="playerTitle">MorandiPlay</div>
+          <div class="artist" id="playerArtist">选一首歌开始吧</div>
         </div>
       </div>
-      <div class="player-controls">
-        <button class="ctrl-btn" onclick="playPrev()">⏮</button>
-        <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">▶</button>
-        <button class="ctrl-btn" onclick="playNext()">⏭</button>
+      <div class="player-center">
+        <button class="ctl" onclick="playPrev()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--text)"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="ctl play" id="playBtn" onclick="togglePlay()">
+          <svg id="iconPlay" width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="iconPause" width="22" height="22" viewBox="0 0 24 24" fill="#fff" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+        </button>
+        <button class="ctl" onclick="playNext()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--text)"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+        </button>
       </div>
-      <div class="player-progress">
+      <div class="player-right">
         <span class="time" id="curTime">0:00</span>
-        <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0" step="0.1">
+        <span class="time-sep">/</span>
         <span class="time" id="totalTime">0:00</span>
-      </div>
-      <div class="player-extra">
-        <button class="ctrl-btn small" id="lyricsToggle" onclick="toggleLyrics()">词</button>
-        <div class="volume-wrap">
-          <button class="ctrl-btn small" onclick="toggleMute()">🔊</button>
-          <input type="range" class="volume-bar" id="volumeBar" min="0" max="100" value="80">
+        <select class="quality-sel" id="quality" title="音质">
+          <option value="128k">128K</option>
+          <option value="320k" selected>320K</option>
+          <option value="flac">FLAC</option>
+          <option value="flac24bit">Hi-Res</option>
+        </select>
+        <button class="ctl small" onclick="toggleLyrics()" title="歌词">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h13"/></svg>
+        </button>
+        <div class="vol-wrap">
+          <button class="ctl small" id="volBtn" onclick="toggleMute()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-sec)"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <input type="range" class="vol-bar" id="volumeBar" min="0" max="100" value="80">
         </div>
       </div>
     </div>
   </div>
 </div>
-
 <audio id="audio" preload="auto"></audio>
 <script>
-// ===== State =====
 const audio = document.getElementById('audio');
-let playlist = [], currentIndex = -1, lyrics = [], lyricsTimer = null;
+let playlist = [], currentIndex = -1, lyrics = [], platform = 'netease', lastKeyword = '';
 
-// ===== DOM refs =====
 const $ = id => document.getElementById(id);
 const els = {
-  results: $('results'), emptyState: $('emptyState'), lyricsPanel: $('lyricsPanel'),
-  lyricsBody: $('lyricsBody'), playerTitle: $('playerTitle'), playerArtist: $('playerArtist'),
-  playerCover: $('playerCover'), playBtn: $('playBtn'), curTime: $('curTime'),
-  totalTime: $('totalTime'), progressBar: $('progressBar'), volumeBar: $('volumeBar'),
-  searchInput: $('searchInput'), platform: $('platform'), quality: $('quality')
+  results: $('results'), lyricsPanel: $('lyricsPanel'), lyricsBody: $('lyricsBody'),
+  playerTitle: $('playerTitle'), playerArtist: $('playerArtist'), playerCover: $('playerCover'),
+  playBtn: $('playBtn'), curTime: $('curTime'), totalTime: $('totalTime'),
+  progressBar: $('progressBar'), progressFill: $('progressFill'), volumeBar: $('volumeBar'),
+  searchInput: $('searchInput'), quality: $('quality'),
+  iconPlay: $('iconPlay'), iconPause: $('iconPause')
 };
 
-// ===== Toast =====
+// Toast
 function toast(msg) {
   let t = document.querySelector('.toast');
   if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ===== Search =====
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    platform = tab.dataset.p;
+    if (lastKeyword) doSearch(); // re-search on tab switch
+  });
+});
+
+// Search
 async function doSearch() {
   const keyword = els.searchInput.value.trim();
-  if (!keyword) return toast('请输入搜索关键词');
-  const platform = els.platform.value;
-  els.results.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">搜索中...</p></div>';
-
+  if (!keyword) return toast('输入点什么吧');
+  lastKeyword = keyword;
+  els.results.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px;font-size:13px">搜索中...</p></div>';
   try {
-    const res = await fetch(`/api/search?platform=${platform}&keyword=${encodeURIComponent(keyword)}&page=0&pageSize=30`);
+    const res = await fetch(`/api/search?platform=${platform}&keyword=${encodeURIComponent(keyword)}&page=1&limit=30`);
     const json = await res.json();
     if (json.code !== 0) throw new Error(json.msg || '搜索失败');
-    renderResults(json.data, platform);
+    renderResults(json.data);
   } catch (e) {
-    els.results.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text">${e.message}</div></div>`;
+    els.results.innerHTML = `<div class="empty-state"><div class="empty-text">${esc(e.message)}</div></div>`;
   }
 }
-
 els.searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
-function renderResults(data, platform) {
-  // Normalize: data could be array of songs or {songs:[...]} or {list:[...]}
+function renderResults(data) {
   let songs = Array.isArray(data) ? data : (data.songs || data.list || data.data || []);
   if (!songs.length) {
-    els.results.innerHTML = '<div class="empty-state"><div class="empty-icon">∅</div><div class="empty-text">没有找到结果</div></div>';
+    els.results.innerHTML = '<div class="empty-state"><div class="empty-text">没有找到结果</div></div>';
     return;
   }
   playlist = songs.map(s => ({
-    id: String(s.id || s.songId || s.rid || s.musicrid || ''),
+    id: String(s.id || s.songId || s.rid || s.musicrid || '').replace(/^MUSIC_/i, ''),
     name: s.name || s.songName || s.title || s.SONGNAME || '未知',
-    artist: s.artist || s.singer || s.artistName || s.ARTIST || (Array.isArray(s.artists) ? s.artists.map(a=>a.name).join('/') : '') || '未知',
-    album: s.album || s.albumName || s.ALBUM || (s.al ? s.al.name : '') || '',
-    duration: s.duration || s.dt || s.songTimeMinutes || 0,
+    artist: s.artist || s.singer || (Array.isArray(s.artists) ? s.artists.map(a => a.name).join(', ') : '') || '未知',
+    album: s.album || s.albumName || (s.al ? s.al.name : '') || '',
+    duration: s.duration || s.dt || 0,
     cover: s.cover || s.picUrl || s.pic || (s.al ? s.al.picUrl : '') || '',
     platform
   }));
-  // Clean IDs (kuwo may have "MUSIC_xxx")
-  playlist.forEach(s => { s.id = s.id.replace(/^MUSIC_/i, ''); });
-
   let html = '<ul class="song-list">';
   playlist.forEach((s, i) => {
-    const dur = formatDuration(s.duration);
-    html += `<li class="song-item${i===currentIndex?' active':''}" onclick="playSong(${i})">
-      <span class="song-index">${i+1}</span>
-      <div class="song-info">
-        <div class="song-name">${esc(s.name)}</div>
-        <div class="song-detail">${esc(s.artist)}${s.album?' · '+esc(s.album):''}</div>
-      </div>
-      <span class="song-duration">${dur}</span>
-    </li>`;
+    html += `<li class="song-item${i === currentIndex ? ' active' : ''}" onclick="playSong(${i})">
+      <span class="song-idx">${String(i + 1).padStart(2, '0')}</span>
+      <div class="song-info"><div class="song-name">${esc(s.name)}</div>
+      <div class="song-extra">${esc(s.artist)}${s.album ? ' · ' + esc(s.album) : ''}</div></div>
+      <span class="song-dur">${fmtDur(s.duration)}</span></li>`;
   });
-  html += '</ul>';
-  els.results.innerHTML = html;
+  els.results.innerHTML = html + '</ul>';
 }
 
-// ===== Play =====
-async function playSong(index) {
-  if (index < 0 || index >= playlist.length) return;
-  currentIndex = index;
-  const song = playlist[index];
-  const quality = els.quality.value;
-
-  // Update UI immediately
+// Play
+async function playSong(idx) {
+  if (idx < 0 || idx >= playlist.length) return;
+  currentIndex = idx;
+  const song = playlist[idx];
   els.playerTitle.textContent = song.name;
   els.playerArtist.textContent = song.artist;
-  els.playerCover.innerHTML = song.cover ? `<img src="${song.cover}" alt="">` : '♪';
-  els.playBtn.textContent = '⏸';
+  els.playerCover.innerHTML = song.cover ? `<img src="${song.cover}">` : defaultCoverSVG();
+  setPlaying(true);
   highlightActive();
-
   try {
     const res = await fetch('/api/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ platform: song.platform, ids: song.id, quality })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform: song.platform, ids: song.id, quality: els.quality.value })
     });
     const json = await res.json();
     if (json.code !== 0) throw new Error(json.msg || '解析失败');
-
     const d = Array.isArray(json.data) ? json.data[0] : json.data;
     const url = d.url || d.playUrl || d.src || '';
     if (!url) throw new Error('无法获取播放链接');
-
     audio.src = url;
     audio.play().catch(() => {});
-
-    // Cover from parse response
-    if (d.cover || d.picUrl || d.pic) {
-      els.playerCover.innerHTML = `<img src="${d.cover||d.picUrl||d.pic}" alt="">`;
-    }
-
-    // Lyrics
-    const lrc = d.lyrics || d.lyric || d.lrc || '';
-    parseLyrics(lrc);
-  } catch (e) {
-    toast(e.message);
-    els.playBtn.textContent = '▶';
-  }
+    if (d.cover || d.picUrl || d.pic) els.playerCover.innerHTML = `<img src="${d.cover || d.picUrl || d.pic}">`;
+    parseLyrics(d.lyrics || d.lyric || d.lrc || '');
+  } catch (e) { toast(e.message); setPlaying(false); }
 }
-// ===== Playback Controls =====
-function togglePlay() {
-  if (!audio.src) return;
-  if (audio.paused) { audio.play(); els.playBtn.textContent = '⏸'; }
-  else { audio.pause(); els.playBtn.textContent = '▶'; }
-}
+// Controls
+function togglePlay() { if (!audio.src) return; audio.paused ? audio.play() : audio.pause(); }
 function playPrev() { if (currentIndex > 0) playSong(currentIndex - 1); }
 function playNext() { if (currentIndex < playlist.length - 1) playSong(currentIndex + 1); }
-function toggleMute() {
-  audio.muted = !audio.muted;
-  document.querySelector('.volume-wrap .ctrl-btn').textContent = audio.muted ? '🔇' : '🔊';
-}
+function toggleMute() { audio.muted = !audio.muted; }
+function setPlaying(v) { els.iconPlay.style.display = v ? 'none' : ''; els.iconPause.style.display = v ? '' : 'none'; }
 
-// Audio events
 audio.addEventListener('timeupdate', () => {
   if (!audio.duration) return;
   const pct = (audio.currentTime / audio.duration) * 100;
-  els.progressBar.value = pct;
-  els.curTime.textContent = formatTime(audio.currentTime);
-  updateActiveLyric(audio.currentTime);
+  els.progressFill.style.width = pct + '%';
+  els.progressBar.value = (audio.currentTime / audio.duration) * 1000;
+  els.curTime.textContent = fmtTime(audio.currentTime);
+  updateLyric(audio.currentTime);
 });
-audio.addEventListener('loadedmetadata', () => {
-  els.totalTime.textContent = formatTime(audio.duration);
-});
-audio.addEventListener('ended', () => { playNext(); });
-audio.addEventListener('pause', () => { els.playBtn.textContent = '▶'; });
-audio.addEventListener('play', () => { els.playBtn.textContent = '⏸'; });
-
-els.progressBar.addEventListener('input', () => {
-  if (audio.duration) audio.currentTime = (els.progressBar.value / 100) * audio.duration;
-});
-els.volumeBar.addEventListener('input', () => {
-  audio.volume = els.volumeBar.value / 100;
-});
+audio.addEventListener('loadedmetadata', () => { els.totalTime.textContent = fmtTime(audio.duration); });
+audio.addEventListener('ended', playNext);
+audio.addEventListener('pause', () => setPlaying(false));
+audio.addEventListener('play', () => setPlaying(true));
+els.progressBar.addEventListener('input', () => { if (audio.duration) audio.currentTime = (els.progressBar.value / 1000) * audio.duration; });
+els.volumeBar.addEventListener('input', () => { audio.volume = els.volumeBar.value / 100; });
 audio.volume = 0.8;
 
-// ===== Lyrics =====
+// Lyrics
 function parseLyrics(lrc) {
-  lyrics = [];
-  els.lyricsBody.innerHTML = '';
-  if (!lrc) {
-    els.lyricsBody.innerHTML = '<div class="lyrics-line" style="padding-top:40%">暂无歌词</div>';
-    return;
+  lyrics = []; els.lyricsBody.innerHTML = '';
+  if (!lrc) { els.lyricsBody.innerHTML = '<div class="lyrics-line" style="padding-top:40%">暂无歌词</div>'; return; }
+  for (const line of lrc.split('\n')) {
+    const m = line.match(/\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/);
+    if (m) { const t = +m[1]*60 + +m[2] + +m[3]/(m[3].length===3?1000:100); const txt = m[4].trim(); if (txt) lyrics.push({time:t,text:txt}); }
   }
-  const lines = lrc.split('\n');
-  for (const line of lines) {
-    const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/);
-    if (match) {
-      const time = parseInt(match[1]) * 60 + parseInt(match[2]) + parseInt(match[3]) / (match[3].length === 3 ? 1000 : 100);
-      const text = match[4].trim();
-      if (text) lyrics.push({ time, text });
-    }
-  }
-  lyrics.sort((a, b) => a.time - b.time);
-  let html = '<div style="height:40%"></div>';
-  lyrics.forEach((l, i) => {
-    html += `<div class="lyrics-line" data-idx="${i}">${esc(l.text)}</div>`;
-  });
-  html += '<div style="height:40%"></div>';
-  els.lyricsBody.innerHTML = html;
+  lyrics.sort((a,b) => a.time - b.time);
+  els.lyricsBody.innerHTML = '<div style="height:40%"></div>' +
+    lyrics.map((l,i) => `<div class="lyrics-line" data-i="${i}">${esc(l.text)}</div>`).join('') +
+    '<div style="height:40%"></div>';
+  if (!els.lyricsPanel.classList.contains('hidden')) return;
+  els.lyricsPanel.classList.remove('hidden'); // auto-show lyrics
 }
-
-function updateActiveLyric(time) {
+let lastLyricIdx = -1;
+function updateLyric(time) {
   if (!lyrics.length) return;
   let idx = -1;
-  for (let i = lyrics.length - 1; i >= 0; i--) {
-    if (time >= lyrics[i].time) { idx = i; break; }
-  }
-  const lines = els.lyricsBody.querySelectorAll('.lyrics-line');
-  lines.forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
-  if (idx >= 0 && lines[idx]) {
-    lines[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  for (let i = lyrics.length - 1; i >= 0; i--) { if (time >= lyrics[i].time) { idx = i; break; } }
+  if (idx === lastLyricIdx) return;
+  lastLyricIdx = idx;
+  els.lyricsBody.querySelectorAll('.lyrics-line').forEach((el, i) => el.classList.toggle('active', i === idx));
+  const el = els.lyricsBody.querySelector('.lyrics-line.active');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+function toggleLyrics() { els.lyricsPanel.classList.toggle('hidden'); }
 
-function toggleLyrics() {
-  els.lyricsPanel.classList.toggle('hidden');
-}
+// Helpers
+function fmtTime(s) { if (!s||isNaN(s)) return '0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+function fmtDur(d) { if (!d) return ''; if (d > 1000) d /= 1000; return fmtTime(d); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function highlightActive() { document.querySelectorAll('.song-item').forEach((el,i) => el.classList.toggle('active', i===currentIndex)); }
+function defaultCoverSVG() { return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'; }
 
-// ===== Helpers =====
-function formatTime(s) {
-  if (!s || isNaN(s)) return '0:00';
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-  return m + ':' + String(sec).padStart(2, '0');
-}
-function formatDuration(d) {
-  if (!d) return '';
-  if (d > 1000) d = d / 1000; // ms to s
-  return formatTime(d);
-}
-function esc(s) {
-  const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML;
-}
-function highlightActive() {
-  document.querySelectorAll('.song-item').forEach((el, i) => {
-    el.classList.toggle('active', i === currentIndex);
-  });
-}
-
-// ===== Keyboard shortcuts =====
+// Keyboard
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowLeft') { audio.currentTime = Math.max(0, audio.currentTime - 5); }
-  if (e.code === 'ArrowRight') { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5); }
+  if (e.code === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+  if (e.code === 'ArrowRight') audio.currentTime = Math.min(audio.duration||0, audio.currentTime + 5);
 });
 </script>
 </body>
