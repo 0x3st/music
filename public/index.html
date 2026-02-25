@@ -316,6 +316,7 @@ audio.addEventListener('ended', playNext);
 audio.addEventListener('pause', () => setPlaying(false));
 audio.addEventListener('play', () => setPlaying(true));
 els.progressBar.addEventListener('input', () => { if (audio.duration) audio.currentTime = (els.progressBar.value / 1000) * audio.duration; });
+els.quality.addEventListener('change', () => { if (currentIndex >= 0) playSong(currentIndex); });
 els.volumeBar.addEventListener('input', () => { audio.volume = els.volumeBar.value / 100; });
 audio.volume = 0.8;
 
