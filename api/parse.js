@@ -28,8 +28,25 @@ export default async function handler(req, res) {
       body: JSON.stringify({ platform, ids: String(ids), quality })
     });
 
-    const data = await upstream.json();
-    return res.status(200).json(data);
+    const raw = await upstream.json();
+    if (raw.code !== 0) return res.status(200).json({ code: -1, msg: raw.message || 'Parse failed' });
+
+    const items = raw.data?.data || [];
+    const result = items.map(item => {
+      if (!item.success) return { id: item.id, error: item.error };
+      return {
+        id: item.id,
+        url: item.url || '',
+        name: item.info?.name || '',
+        artist: item.info?.artist || '',
+        album: item.info?.album || '',
+        duration: item.info?.duration || 0,
+        cover: item.cover || '',
+        lyrics: item.lyrics || ''
+      };
+    });
+
+    return res.status(200).json({ code: 0, data: result });
   } catch (err) {
     return res.status(500).json({ code: -1, msg: err.message });
   }

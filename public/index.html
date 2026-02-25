@@ -285,12 +285,15 @@ async function playSong(idx) {
     const json = await res.json();
     if (json.code !== 0) throw new Error(json.msg || '解析失败');
     const d = Array.isArray(json.data) ? json.data[0] : json.data;
-    const url = d.url || d.playUrl || d.src || '';
-    if (!url) throw new Error('无法获取播放链接');
-    audio.src = url;
+    if (!d || d.error) throw new Error(d?.error || '解析失败');
+    if (!d.url) throw new Error('无法获取播放链接');
+    audio.src = d.url;
     audio.play().catch(() => {});
-    if (d.cover || d.picUrl || d.pic) els.playerCover.innerHTML = `<img src="${d.cover || d.picUrl || d.pic}">`;
-    parseLyrics(d.lyrics || d.lyric || d.lrc || '');
+    if (d.cover) {
+      els.playerCover.innerHTML = '<img src="' + d.cover + '">';
+      song.cover = d.cover;
+    }
+    parseLyrics(d.lyrics || '');
   } catch (e) { toast(e.message); setPlaying(false); }
 }
 // Controls
