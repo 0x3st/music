@@ -63,10 +63,15 @@ async function searchPlatform(platform, keyword, page, limit) {
   }
 
   const upstream = await fetch(url, fetchOpts);
+  if (!upstream.ok) throw new Error(`upstream ${upstream.status}`);
   const ct = upstream.headers.get('content-type') || '';
   let data;
   if (ct.includes('json')) { data = await upstream.json(); }
-  else { const text = await upstream.text(); try { data = JSON.parse(text); } catch { data = text; } }
+  else {
+    const text = await upstream.text();
+    try { data = JSON.parse(text); }
+    catch { throw new Error('non-json response: ' + text.substring(0, 120)); }
+  }
 
   if (config.transform) {
     const fn = new Function('return ' + config.transform)();
@@ -75,6 +80,7 @@ async function searchPlatform(platform, keyword, page, limit) {
 
   // Normalize and tag with platform
   const songs = Array.isArray(data) ? data : [];
+  if (songs.length === 0) throw new Error('empty results');
   return songs.map(s => ({ ...s, platform, platformLabel: PLATFORM_LABELS[platform] }));
 }
 
