@@ -290,7 +290,7 @@ async function playSong(idx) {
     audio.src = d.url;
     audio.play().catch(() => {});
     if (d.cover) {
-      els.playerCover.innerHTML = '<img src="' + d.cover + '">';
+      els.playerCover.innerHTML = '<img src="' + d.cover + '" onerror="this.parentNode.innerHTML=defaultCoverSVG()">';
       song.cover = d.cover;
     }
     parseLyrics(d.lyrics || '');
