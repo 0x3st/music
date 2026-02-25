@@ -31,7 +31,35 @@ function deepEvalBody(obj, vars) {
   return obj;
 }
 
+async function searchNetease(keyword, page, limit) {
+  const offset = ((page || 1) - 1) * (limit || 20);
+  const res = await fetch('https://music.163.com/api/search/get/web', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Referer': 'https://music.163.com/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Cookie': 'NMTID=placeholder; MUSIC_U=placeholder; __csrf=placeholder'
+    },
+    body: `s=${encodeURIComponent(keyword)}&type=1&offset=${offset}&limit=${limit || 20}`
+  });
+  if (!res.ok) throw new Error(`netease ${res.status}`);
+  const data = await res.json();
+  const songs = data.result?.songs;
+  if (!songs || !songs.length) throw new Error('netease empty');
+  return songs.map(item => ({
+    id: String(item.id),
+    name: item.name,
+    artist: item.artists?.map(a => a.name).join(', ') || '',
+    album: item.album?.name || '',
+    platform: 'netease',
+    platformLabel: PLATFORM_LABELS.netease
+  }));
+}
+
 async function searchPlatform(platform, keyword, page, limit) {
+  if (platform === 'netease') return searchNetease(keyword, page, limit);
+
   const vars = { keyword, page, limit };
   const configRes = await fetch(`${TUNEHUB_BASE}/v1/methods/${platform}/search`);
   const configJson = await configRes.json();
@@ -80,7 +108,6 @@ async function searchPlatform(platform, keyword, page, limit) {
 
   // Normalize and tag with platform
   const songs = Array.isArray(data) ? data : [];
-  if (songs.length === 0) throw new Error('empty results');
   return songs.map(s => ({ ...s, platform, platformLabel: PLATFORM_LABELS[platform] }));
 }
 
