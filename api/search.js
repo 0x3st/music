@@ -33,28 +33,39 @@ function deepEvalBody(obj, vars) {
 
 async function searchNetease(keyword, page, limit) {
   const offset = ((page || 1) - 1) * (limit || 20);
-  const res = await fetch('https://music.163.com/api/search/get/web', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Referer': 'https://music.163.com/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      'Cookie': 'NMTID=placeholder; MUSIC_U=placeholder; __csrf=placeholder'
-    },
-    body: `s=${encodeURIComponent(keyword)}&type=1&offset=${offset}&limit=${limit || 20}`
-  });
-  if (!res.ok) throw new Error(`netease ${res.status}`);
-  const data = await res.json();
-  const songs = data.result?.songs;
-  if (!songs || !songs.length) throw new Error('netease empty');
-  return songs.map(item => ({
-    id: String(item.id),
-    name: item.name,
-    artist: item.artists?.map(a => a.name).join(', ') || '',
-    album: item.album?.name || '',
-    platform: 'netease',
-    platformLabel: PLATFORM_LABELS.netease
-  }));
+  const params = new URLSearchParams({ s: keyword, type: '1', offset: String(offset), limit: String(limit || 20) });
+  const headers = {
+    'Referer': 'https://music.163.com/',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  };
+
+  // Try multiple endpoints in order
+  const endpoints = [
+    { url: 'https://music.163.com/api/cloudsearch/pc?' + params, method: 'GET' },
+    { url: 'https://interface.music.163.com/api/search/get/web?' + params, method: 'GET' },
+    { url: 'https://music.163.com/api/search/get/web', method: 'POST', body: params.toString(), ct: 'application/x-www-form-urlencoded' }
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const opts = { method: ep.method, headers: { ...headers } };
+      if (ep.body) { opts.body = ep.body; opts.headers['Content-Type'] = ep.ct; }
+      const res = await fetch(ep.url, opts);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const songs = data.result?.songs;
+      if (!songs?.length) continue;
+      return songs.map(item => ({
+        id: String(item.id),
+        name: item.name,
+        artist: (item.artists || item.ar || []).map(a => a.name).join(', '),
+        album: item.album?.name || item.al?.name || '',
+        platform: 'netease',
+        platformLabel: PLATFORM_LABELS.netease
+      }));
+    } catch { continue; }
+  }
+  throw new Error('all netease endpoints failed');
 }
 
 async function searchPlatform(platform, keyword, page, limit) {
