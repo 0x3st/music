@@ -18,10 +18,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ code: -1, msg: 'POST only' });
   }
 
-  const { platform, ids, quality = '320k' } = req.body || {};
+  const { platform, ids, quality = 'flac24bit' } = req.body || {};
   if (!platform || !ids) {
     return res.status(400).json({ code: -1, msg: 'Missing platform or ids' });
   }
+
+  // Kuwo doesn't support flac24bit, cap at flac
+  const actualQuality = (platform === 'kuwo' && quality === 'flac24bit') ? 'flac' : quality;
 
   try {
     const upstream = await fetch(`${TUNEHUB_BASE}/v1/parse`, {
@@ -30,7 +33,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY
       },
-      body: JSON.stringify({ platform, ids: String(ids), quality })
+      body: JSON.stringify({ platform, ids: String(ids), quality: actualQuality })
     });
 
     const raw = await upstream.json();
