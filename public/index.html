@@ -127,11 +127,7 @@ input,select{font:inherit;color:var(--text)}
         </button>
       </div>
     </div>
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-p="netease">网易云</button>
-      <button class="tab" data-p="qq">QQ音乐</button>
-      <button class="tab" data-p="kuwo">酷我</button>
-    </div>
+    <div style="border-bottom:1px solid var(--border)"></div>
   </div>
 
   <div class="main">
@@ -207,7 +203,7 @@ input,select{font:inherit;color:var(--text)}
 <audio id="audio" preload="auto"></audio>
 <script>
 const audio = document.getElementById('audio');
-let playlist = [], currentIndex = -1, lyrics = [], platform = 'netease', lastKeyword = '';
+let playlist = [], currentIndex = -1, lyrics = [], lastKeyword = '';
 
 const $ = id => document.getElementById(id);
 const els = {
@@ -227,16 +223,6 @@ function toast(msg) {
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Tabs
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    platform = tab.dataset.p;
-    if (lastKeyword) doSearch(); // re-search on tab switch
-  });
-});
-
 // Search
 async function doSearch() {
   const keyword = els.searchInput.value.trim();
@@ -244,7 +230,7 @@ async function doSearch() {
   lastKeyword = keyword;
   els.results.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px;font-size:13px">搜索中...</p></div>';
   try {
-    const res = await fetch(`/api/search?platform=${platform}&keyword=${encodeURIComponent(keyword)}&page=1&limit=30`);
+    const res = await fetch(`/api/search?keyword=${encodeURIComponent(keyword)}&page=1&limit=30`);
     const json = await res.json();
     if (json.code !== 0) throw new Error(json.msg || '搜索失败');
     renderResults(json.data);
@@ -267,14 +253,15 @@ function renderResults(data) {
     album: s.album || s.albumName || (s.al ? s.al.name : '') || '',
     duration: s.duration || s.dt || 0,
     cover: s.cover || s.picUrl || s.pic || (s.al ? s.al.picUrl : '') || '',
-    platform
+    platform: s.platform || 'netease',
+    platformLabel: s.platformLabel || s.platform || ''
   }));
   let html = '<ul class="song-list">';
   playlist.forEach((s, i) => {
     html += `<li class="song-item${i === currentIndex ? ' active' : ''}" onclick="playSong(${i})">
       <span class="song-idx">${String(i + 1).padStart(2, '0')}</span>
       <div class="song-info"><div class="song-name">${esc(s.name)}</div>
-      <div class="song-extra">${esc(s.artist)}${s.album ? ' · ' + esc(s.album) : ''}</div></div>
+      <div class="song-extra">${esc(s.artist)}${s.album ? ' · ' + esc(s.album) : ''} · ${esc(s.platformLabel)}</div></div>
       <span class="song-dur">${fmtDur(s.duration)}</span></li>`;
   });
   els.results.innerHTML = html + '</ul>';
