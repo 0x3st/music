@@ -1,5 +1,10 @@
 const TUNEHUB_BASE = 'https://tunehub.sayqz.com/api';
 
+function proxyUrl(url) {
+  if (!url || url.startsWith('https://')) return url;
+  return '/api/proxy?url=' + encodeURIComponent(url);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -36,12 +41,12 @@ export default async function handler(req, res) {
       if (!item.success) return { id: item.id, error: item.error };
       return {
         id: item.id,
-        url: item.url || '',
+        url: proxyUrl(item.url),
         name: item.info?.name || '',
         artist: item.info?.artist || '',
         album: item.info?.album || '',
         duration: item.info?.duration || 0,
-        cover: item.cover || '',
+        cover: proxyUrl(item.cover),
         lyrics: item.lyrics || ''
       };
     });
